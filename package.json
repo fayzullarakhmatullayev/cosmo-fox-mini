@@ -1,0 +1,36 @@
+{
+  "name": "new_gulp_layout",
+  "version": "1.0.0",
+  "description": "Gulp Package",
+  "main": "index.js",
+  "scripts": {
+    "start": "gulp",
+    "server:dev": "nodemon server.js",
+    "server:start": "node server.js",
+    "ngrok": "ngrok http http://localhost:5000"
+  },
+  "author": "Fayzulla Rakhmatullayev",
+  "license": "ISC",
+  "devDependencies": {
+    "browser-sync": "^2.27.5",
+    "gulp": "^4.0.2",
+    "gulp-autoprefixer": "^8.0.0",
+    "gulp-clean-css": "^4.3.0",
+    "gulp-file-include": "^2.3.0",
+    "gulp-group-css-media-queries": "^1.2.2",
+    "gulp-imagemin": "^7.0.0",
+    "gulp-rename": "^2.0.0",
+    "gulp-sass": "^5.0.0",
+    "gulp-uglify-es": "^3.0.0",
+    "nodemon": "^3.1.10",
+    "sass": "1.77.1",
+    "sass-loader": "^16.0.5",
+    "webp-converter": "^2.2.3"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "node-telegram-bot-api": "^0.66.0"
+  }
+}
