@@ -219,5 +219,17 @@ img {
     left: 50%;
     transform: translateX(-50%);
     z-index: 10;
+    border: 2px solid rgba($color: $colorBlue, $alpha: 0.7);
+
+    .middle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 65px;
+      height: 65px;
+      background-color: rgba($color: $colorBlue, $alpha: 0.3);
+      border-radius: 50%;
+    }
   }
 }
