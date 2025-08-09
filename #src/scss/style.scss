@@ -230,6 +230,46 @@ img {
       height: 65px;
       background-color: rgba($color: $colorBlue, $alpha: 0.3);
       border-radius: 50%;
+
+      .m-stick {
+        position: absolute;
+        width: 2px;
+        height: 8px;
+        background-color: $colorGreen;
+
+        &-t {
+          top: -4px;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+        &-b {
+          bottom: -4px;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+
+        &-r {
+          width: 8px;
+          height: 2px;
+          right: -4px;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+        &-l {
+          width: 8px;
+          height: 2px;
+          left: -4px;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+      }
+      .m-round {
+        width: 65px;
+        height: 65px;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
     }
   }
 }
