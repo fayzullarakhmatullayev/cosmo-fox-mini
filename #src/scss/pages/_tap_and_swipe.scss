@@ -5,7 +5,7 @@
       position: absolute;
       top: 0;
       left: 0;
-      background-color: rgba($color: $colorBlack, $alpha: 0.2);
+      background-color: rgba($color: #000, $alpha: 0.2);
       width: 100%;
       height: 100%;
       z-index: 7;
@@ -14,7 +14,7 @@
   &_content {
     .fox {
       position: absolute;
-      top: 50%;
+      top: 47%;
       left: 50%;
       width: 100%;
       height: 100%;
@@ -28,14 +28,15 @@
     z-index: 10;
     width: calc(100% - 28px);
     left: 14px;
-    bottom: 50px;
+    bottom: 38px;
 
     &-rocket {
       width: 19px;
       height: 31px;
       position: absolute;
       top: -40px;
-      left: 20%;
+      left: 41%;
+      transform: translateX(-50%);
     }
     &-block {
       border: 1px solid $colorArrow;
