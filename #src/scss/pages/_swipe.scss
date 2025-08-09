@@ -2,7 +2,7 @@ $shapePixel: 40px;
 
 .swipe {
   .screen {
-    padding: 36px 7px;
+    padding: 14px 7px 36px;
     &::before {
       content: '';
       position: absolute;
@@ -49,7 +49,7 @@ $shapePixel: 40px;
       );
 
       &-t {
-        max-height: 40%;
+        max-height: 45%;
       }
 
       &.shadow-t {
