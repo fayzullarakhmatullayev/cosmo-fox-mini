@@ -1,0 +1,221 @@
+.spot_on_content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+
+  .fox {
+    position: absolute;
+    width: 771px;
+    height: 1156px;
+
+    object-fit: contain;
+    z-index: 4;
+    top: 0%;
+    left: 0%;
+    @include mobile {
+      top: -6%;
+      left: -42%;
+    }
+
+    @include mobileSm {
+      width: 500px;
+      height: 800px;
+      top: -15%;
+      left: -25%;
+    }
+  }
+
+  .hamster {
+    position: absolute;
+    top: 46%;
+    right: 1%;
+    z-index: 10;
+    width: 100px;
+    height: 100px;
+  }
+
+  .cursor {
+    z-index: 10;
+    position: absolute;
+    top: 44%;
+    right: 11%;
+    width: 80px;
+    height: 80px;
+    transform: rotate(45deg);
+    background: rgba($color: $colorBlue, $alpha: 0.4);
+    border: 3px solid;
+    border-color: rgba($color: $colorBlue, $alpha: 0.7);
+
+    &::after {
+      content: '';
+      position: absolute;
+      width: 88px;
+      height: 88px;
+      background: transparent;
+      top: -7px;
+      left: -7px;
+      border: 1px solid rgba($color: $colorBlue, $alpha: 0.7);
+    }
+
+    .plus {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      rotate: 45deg;
+      &::after {
+        content: '';
+        position: absolute;
+        width: 2px;
+        height: 10px;
+        background: $colorText;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      &::before {
+        content: '';
+        position: absolute;
+        width: 10px;
+        height: 2px;
+        background: $colorText;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    .arrow {
+      position: absolute;
+      height: 50px;
+      width: 2px;
+      background: $colorText;
+      z-index: 5;
+
+      &::after {
+        content: '';
+        position: absolute;
+        width: 2px;
+        height: 10px;
+        background: $colorText;
+        bottom: 10px;
+        left: 0px;
+        rotate: 90deg;
+      }
+      &-rt {
+        right: 50%;
+        top: -25px;
+      }
+      &-lt {
+        left: -2px;
+        rotate: -90deg;
+        top: 11px;
+      }
+      &-lb {
+        right: 50%;
+        bottom: -25px;
+        rotate: 180deg;
+      }
+      &-rb {
+        right: -2px;
+        rotate: 90deg;
+        bottom: 13px;
+      }
+    }
+  }
+
+  .controller {
+    background: rgba($color: $colorBlue, $alpha: 0.4);
+    border-radius: 50%;
+    width: 135px;
+    height: 135px;
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    border: 2px solid rgba($color: $colorBlue, $alpha: 0.7);
+
+    .middle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 65px;
+      height: 65px;
+      background-color: rgba($color: $colorBlue, $alpha: 0.3);
+      border-radius: 50%;
+
+      .m-stick {
+        position: absolute;
+        width: 2px;
+        height: 8px;
+        background-color: $colorGreen;
+
+        &-t {
+          top: -4px;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+        &-b {
+          bottom: -4px;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+
+        &-r {
+          width: 8px;
+          height: 2px;
+          right: -4px;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+        &-l {
+          width: 8px;
+          height: 2px;
+          left: -4px;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+      }
+      .m-round {
+        width: 65px;
+        height: 65px;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    }
+    .c-arrow {
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-bottom: 7px solid $colorArrow;
+      position: absolute;
+
+      &-t {
+        top: 4px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      &-b {
+        bottom: 4px;
+        left: 50%;
+        transform: translateX(-50%) rotate(180deg);
+      }
+
+      &-r {
+        right: 4px;
+        top: 50%;
+        transform: translateY(-50%) rotate(90deg);
+      }
+      &-l {
+        left: 4px;
+        top: 50%;
+        transform: translateY(-50%) rotate(-90deg);
+      }
+    }
+  }
+}
