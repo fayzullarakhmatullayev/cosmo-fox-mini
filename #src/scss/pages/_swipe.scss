@@ -2,12 +2,13 @@ $shapePixel: 40px;
 
 .swipe {
   .screen {
+    padding: 36px 7px;
     &::before {
       content: '';
       position: absolute;
       top: 0;
       left: 0;
-      background-color: rgba($color: #000, $alpha: 0.2);
+      background-color: rgba($color: #000, $alpha: 0.4);
       width: 100%;
       height: 100%;
       z-index: 7;
@@ -17,6 +18,17 @@ $shapePixel: 40px;
     height: 100%;
     display: flex;
     flex-direction: column;
+    &_img {
+      position: absolute;
+      top: 43%;
+      left: 44%;
+      width: 100%;
+      height: 100%;
+      transform: translate(-50%, -50%);
+      z-index: 5;
+      object-fit: contain;
+      scale: 0.9;
+    }
 
     .frame {
       position: relative;
@@ -35,6 +47,10 @@ $shapePixel: 40px;
         0 calc(100% - 20px),
         0 20px
       );
+
+      &-t {
+        max-height: 40%;
+      }
 
       &.shadow-t {
         background: linear-gradient(
@@ -56,7 +72,6 @@ $shapePixel: 40px;
       }
     }
 
-    /* Cut corners by overlaying background-colored blocks */
     .corner {
       position: absolute;
       width: 28px;
@@ -64,25 +79,96 @@ $shapePixel: 40px;
 
       transform: rotate(45deg);
       border: 3px solid $colorArrow;
-      box-sizing: border-box;
-    }
 
-    /* Position each corner */
-    .corner.tl {
-      top: -15px;
-      left: -15px;
+      &.tl {
+        top: -15px;
+        left: -15px;
+      }
+      &.tr {
+        top: -15px;
+        right: -15px;
+      }
+      &.bl {
+        bottom: -15px;
+        left: -15px;
+      }
+      &.br {
+        bottom: -15px;
+        right: -15px;
+      }
     }
-    .corner.tr {
-      top: -15px;
-      right: -15px;
+  }
+  &_block {
+    width: calc(100% - 41px);
+    height: 46px;
+    margin: 0 auto;
+    outline: 3px solid $colorArrow;
+    z-index: 10;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .middle {
+      width: 138px;
+      outline: 2px solid $colorArrow;
+      height: 100%;
+      background: rgba($color: $colorBlue, $alpha: 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
     }
-    .corner.bl {
-      bottom: -15px;
-      left: -15px;
+    .side {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: 0.2px;
+      padding: 5px;
+      gap: 2px;
+      @include mobile {
+        gap: 0;
+        flex-direction: column;
+      }
+
+      &.left {
+        background: linear-gradient(
+          90deg,
+          rgba($color: $colorBlue, $alpha: 0.7),
+          rgba($color: $colorBlue, $alpha: 0.1)
+        );
+      }
+      &.right {
+        background: linear-gradient(
+          90deg,
+          rgba($color: $colorBlue, $alpha: 0.1),
+          rgba($color: $colorBlue, $alpha: 0.7)
+        );
+      }
     }
-    .corner.br {
-      bottom: -15px;
-      right: -15px;
+    &_middle {
+      position: relative;
+      z-index: 10;
+
+      .shape {
+        position: absolute;
+        top: 50%;
+        width: 23px;
+        height: 96px;
+        &-l {
+          left: 0;
+          transform: translateY(-49%) rotate(180deg);
+        }
+        &-r {
+          right: 0;
+          transform: translateY(-51%);
+        }
+      }
     }
   }
 }
