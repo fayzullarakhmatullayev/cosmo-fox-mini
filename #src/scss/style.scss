@@ -271,5 +271,36 @@ img {
         left: 0;
       }
     }
+    .c-arrow {
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-bottom: 7px solid $colorArrow;
+      position: absolute;
+
+      &-t {
+        top: 4px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      &-b {
+        bottom: 4px;
+        left: 50%;
+        transform: translateX(-50%) rotate(180deg);
+      }
+
+      &-r {
+        right: 4px;
+        top: 50%;
+        transform: translateY(-50%) rotate(90deg);
+      }
+      &-l {
+        left: 4px;
+        top: 50%;
+        transform: translateY(-50%) rotate(-90deg);
+      }
+    }
   }
 }
