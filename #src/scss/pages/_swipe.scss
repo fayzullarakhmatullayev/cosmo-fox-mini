@@ -1,3 +1,5 @@
+$shapePixel: 40px;
+
 .swipe {
   .screen {
     &::before {
@@ -15,70 +17,72 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-  }
 
-  &_block {
-    flex: 1;
-    border: 2px solid $colorArrow;
-    z-index: 10;
-    position: relative;
-    clip-path: polygon(
-      20px 0,
-      calc(100% - 20px) 0,
-      100% 20px,
-      100% calc(100% - 20px),
-      calc(100% - 20px) 100%,
-      20px 100%,
-      0 calc(100% - 20px),
-      0 20px
-    );
-
-    .edge {
-      position: absolute;
-      width: 30px;
-      height: 2px;
-      background: $colorArrow;
+    .frame {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border: 3px solid $colorArrow;
+      box-sizing: border-box;
       z-index: 10;
-      box-shadow: 0px 0px 77.4px 0px rgba(33, 110, 167, 0.42) inset;
+      clip-path: polygon(
+        20px 0,
+        calc(100% - 20px) 0,
+        100% 20px,
+        100% calc(100% - 20px),
+        calc(100% - 20px) 100%,
+        20px 100%,
+        0 calc(100% - 20px),
+        0 20px
+      );
 
-      &-tr {
-        top: 9px;
-        right: -8px;
-        transform: rotate(45deg);
+      &.shadow-t {
+        background: linear-gradient(
+          180deg,
+          rgba($color: $colorArrow, $alpha: 0),
+          rgba($color: $colorArrow, $alpha: 0.1),
+          rgba($color: $colorArrow, $alpha: 0.15),
+          rgba($color: $colorArrow, $alpha: 0.2)
+        );
       }
-      &-tl {
-        top: 9px;
-        left: -8px;
-        transform: rotate(-45deg);
-      }
-      &-br {
-        bottom: 9px;
-        right: -8px;
-        transform: rotate(135deg);
-      }
-      &-bl {
-        bottom: 9px;
-        left: -8px;
-        transform: rotate(-135deg);
+      &.shadow-b {
+        background: linear-gradient(
+          180deg,
+          rgba($color: $colorArrow, $alpha: 0.2),
+          rgba($color: $colorArrow, $alpha: 0.15),
+          rgba($color: $colorArrow, $alpha: 0.1),
+          rgba($color: $colorArrow, $alpha: 0)
+        );
       }
     }
-    &.shadow-t {
-      background: linear-gradient(
-        180deg,
-        rgba($color: $colorArrow, $alpha: 0),
-        rgba($color: $colorArrow, $alpha: 0.1),
-        rgba($color: $colorArrow, $alpha: 0.15),
-        rgba($color: $colorArrow, $alpha: 0.2)
-      );
+
+    /* Cut corners by overlaying background-colored blocks */
+    .corner {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+
+      transform: rotate(45deg);
+      border: 3px solid $colorArrow;
+      box-sizing: border-box;
     }
-    &.shadow-b {
-      background: linear-gradient(
-        180deg,
-        rgba($color: $colorArrow, $alpha: 0.2),
-        rgba($color: $colorArrow, $alpha: 0.15),
-        rgba($color: $colorArrow, $alpha: 0.1),
-        rgba($color: $colorArrow, $alpha: 0)
-      );
+
+    /* Position each corner */
+    .corner.tl {
+      top: -15px;
+      left: -15px;
+    }
+    .corner.tr {
+      top: -15px;
+      right: -15px;
+    }
+    .corner.bl {
+      bottom: -15px;
+      left: -15px;
+    }
+    .corner.br {
+      bottom: -15px;
+      right: -15px;
     }
   }
 }
