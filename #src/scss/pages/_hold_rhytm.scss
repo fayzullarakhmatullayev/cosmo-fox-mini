@@ -1,0 +1,27 @@
+.hold_rhytm {
+  .screen {
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      background-color: rgba($color: #000, $alpha: 0.4);
+      width: 100%;
+      height: 100%;
+      z-index: 7;
+    }
+  }
+}
+
+.hold_rhytm_content {
+  height: 100%;
+  position: relative;
+  .fox {
+    position: absolute;
+    top: 14%;
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    object-fit: contain;
+    width: auto;
+  }
+}
