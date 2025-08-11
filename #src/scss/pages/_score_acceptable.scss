@@ -18,9 +18,6 @@
       @include mobile {
         scale: 1.05;
       }
-      @include mobileMd {
-        top: -4%;
-      }
     }
     .bonuses {
       position: absolute;
