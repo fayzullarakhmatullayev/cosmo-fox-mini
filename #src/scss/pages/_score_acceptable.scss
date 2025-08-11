@@ -10,14 +10,13 @@
 
     .fox {
       position: absolute;
-      top: -10%;
+      top: -14%;
       left: 0;
       scale: 0.8;
       object-fit: contain;
 
       @include mobile {
         scale: 1.05;
-        top: -8%;
       }
       @include mobileMd {
         top: -4%;
