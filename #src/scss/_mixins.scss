@@ -13,6 +13,12 @@
     @content;
   }
 }
+@mixin mobileLg {
+  @media (max-width: 365.98px) {
+    @content;
+  }
+}
+
 @mixin mobileSm {
   @media (max-width: 340.98px) {
     @content;
