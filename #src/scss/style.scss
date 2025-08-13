@@ -228,6 +228,9 @@ img {
   }
 }
 
+// Partials
+@import 'partials/_bubble_tap';
+
 // Pages
 @import 'pages/spot_on';
 @import 'pages/tap_and_swipe';

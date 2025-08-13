@@ -23,6 +23,15 @@
       object-fit: contain;
     }
   }
+  &_block {
+    width: 100%;
+    height: calc(100dvh - 155px);
+    position: relative;
+    // border: 1px solid $colorArrow;
+    z-index: 10;
+    margin: 10px 0;
+    // background: rgba($color: #000000, $alpha: 0.5);
+  }
   .rainbow {
     position: absolute;
     z-index: 10;
@@ -37,6 +46,8 @@
       top: -40px;
       left: 41%;
       transform: translateX(-50%);
+      transition: left 1s ease-in-out;
+      transition-delay: 0.2s;
     }
     &-block {
       border: 1px solid $colorArrow;
