@@ -1,7 +1,18 @@
 class TapAndSwipeGame {
-  stopCircleAnimation = null;
-  intervalId = null;
-  speed = 2000;
+  constructor() {
+    this.stopCircleAnimation = null;
+    this.stopSwipeAnimation = null;
+    this.stopHoldAnimation = null;
+
+    this.intervalId = null;
+    this.speed = 2000;
+    this.states = ['tap', 'swipe'];
+    this.isGameActive = false;
+    this.score = 0;
+
+    this.activeTimeouts = [];
+    this.activeAnimations = [];
+  }
 
   createTapBubble() {
     const bubbleContainer = document.createElement('div');
@@ -10,25 +21,39 @@ class TapAndSwipeGame {
 
     const block = document.querySelector('#tap-and-swipe-block');
     const bubbleHtml = `@@include('../partials/_bubble_tap.html')`;
-    const maxX = block.clientWidth - 10;
-    const maxY = block.clientHeight - 10;
+
+    bubbleContainer.innerHTML = bubbleHtml;
+    block.appendChild(bubbleContainer);
+
+    const rect = bubbleContainer.getBoundingClientRect();
+    const bubbleWidth = rect.width;
+    const bubbleHeight = rect.height;
+
+    const maxX = Math.max(0, block.clientWidth - bubbleWidth);
+    const maxY = Math.max(0, block.clientHeight - bubbleHeight);
 
     const randomX = Math.random() * maxX;
     const randomY = Math.random() * maxY;
 
-    bubbleContainer.innerHTML = bubbleHtml;
     bubbleContainer.style.left = `${randomX}px`;
     bubbleContainer.style.top = `${randomY}px`;
 
-    block.append(bubbleContainer);
     this.animateBubbleTap({ id: bubbleContainer.id });
 
     const circleTimeout = setTimeout(() => {
-      bubbleContainer.remove();
+      if (bubbleContainer.parentNode) {
+        bubbleContainer.remove();
+      }
     }, this.speed * 4);
+
+    this.activeTimeouts.push(circleTimeout);
 
     return () => {
       clearTimeout(circleTimeout);
+      const timeoutIndex = this.activeTimeouts.indexOf(circleTimeout);
+      if (timeoutIndex > -1) {
+        this.activeTimeouts.splice(timeoutIndex, 1);
+      }
     };
   }
 
@@ -39,8 +64,9 @@ class TapAndSwipeGame {
     const turbulence = bubbleContainer.querySelector(`#wavy-border feTurbulence`);
 
     const petals = bubbleContainer.querySelector('#burst');
-
     const tl = gsap.timeline();
+
+    this.activeAnimations.push(tl);
 
     tl.to(bubble, {
       width: 46,
@@ -115,14 +141,186 @@ class TapAndSwipeGame {
     });
   }
 
+  createSwipe() {
+    const lineContainer = document.createElement('div');
+    lineContainer.classList.add('line-container');
+    lineContainer.id = `swipe-${Date.now()}`;
+
+    const block = document.querySelector('#tap-and-swipe-block');
+    const lineHtml = `@@include('../partials/_swipe.html')`;
+
+    lineContainer.innerHTML = lineHtml;
+    block.appendChild(lineContainer);
+
+    const rect = lineContainer.getBoundingClientRect();
+    const lineWidth = rect.width;
+    const lineHeight = rect.height;
+
+    const maxX = Math.max(0, block.clientWidth - lineWidth);
+    const maxY = Math.max(0, block.clientHeight - lineHeight);
+
+    const randomX = Math.random() * maxX;
+    const randomY = Math.random() * maxY;
+
+    lineContainer.style.left = `${randomX}px`;
+    lineContainer.style.top = `${randomY}px`;
+
+    this.animateSwipe({ id: lineContainer.id });
+
+    const swipeTimeout = setTimeout(() => {
+      if (lineContainer.parentNode) {
+        lineContainer.remove();
+      }
+    }, this.speed * 4);
+
+    this.activeTimeouts.push(swipeTimeout);
+
+    return () => {
+      clearTimeout(swipeTimeout);
+      const timeoutIndex = this.activeTimeouts.indexOf(swipeTimeout);
+      if (timeoutIndex > -1) {
+        this.activeTimeouts.splice(timeoutIndex, 1);
+      }
+    };
+  }
+
+  animateSwipe({ id }) {
+    const lineContainer = document.querySelector(`#${id}`);
+    const line = lineContainer.querySelector('.line');
+    const wave = lineContainer.querySelector('#wave');
+    const splash = lineContainer.querySelector('#splash');
+
+    const tl = gsap.timeline();
+
+    this.activeAnimations.push(tl);
+
+    tl.to(line, {
+      opacity: 1,
+      duration: 1.5,
+      ease: 'power1.inOut',
+      onStart: () => {
+        gsap.to(lineContainer, {
+          '--shadow': '0px -4px 6px rgba(69, 194, 248, 1)',
+          duration: 1.5
+        });
+      }
+    });
+
+    tl.to(line, {
+      '--start': 'rgba(248, 86, 58, 1)',
+      '--mid': 'rgba(248, 86, 58, 0.4)',
+      '--end': 'rgba(248, 86, 58, 0)',
+      duration: 2.5,
+      ease: 'power1.inOut',
+      onStart: () => {
+        gsap.to(lineContainer, {
+          '--shadow': '0px -4px 6px rgba(238, 62, 31, 1)',
+          duration: 2.5
+        });
+      }
+    });
+
+    tl.to(line, {
+      opacity: 0,
+      duration: 0.034,
+      onStart: () => {
+        gsap.to(splash, {
+          opacity: 0.8,
+          duration: 0.0085
+        });
+
+        gsap.to(wave, {
+          opacity: 0.5,
+          duration: 0.0085
+        });
+      },
+      onComplete: () => {
+        gsap.to(wave, {
+          opacity: 0,
+          duration: 0.0085
+        });
+        gsap.to(splash, {
+          opacity: 0,
+          duration: 0.0085
+        });
+      }
+    });
+  }
+
+  createHold() {
+    // TODO
+  }
+
+  animateHold() {
+    // TODO
+  }
+
+  startGame() {
+    if (!this.isGameActive) return;
+    const randomState = this.states[Math.floor(Math.random() * this.states.length)];
+    switch (randomState) {
+      case 'tap': {
+        this.stopCircleAnimation = this.createTapBubble();
+        break;
+      }
+      case 'swipe': {
+        this.stopSwipeAnimation = this.createSwipe();
+        break;
+      }
+      case 'hold': {
+        this.stopHoldAnimation = this.createHold();
+        break;
+      }
+    }
+  }
+
   init() {
-    this.stopCircleAnimation = this.createTapBubble();
-    this.intervalId = setInterval(() => this.createTapBubble(), this.speed);
+    this.isGameActive = true;
+    this.intervalId = setInterval(() => this.startGame(), this.speed);
   }
 
   destroy() {
-    clearInterval(this.intervalId);
-    this.stopCircleAnimation();
+    this.isGameActive = false;
+
+    // Clear main interval
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+
+    // Clear all active timeouts
+    this.activeTimeouts.forEach((timeout) => clearTimeout(timeout));
+    this.activeTimeouts = [];
+
+    // Kill all active animations
+    this.activeAnimations.forEach((animation) => {
+      if (animation.kill) animation.kill();
+    });
+    this.activeAnimations = [];
+
+    // Clean up stop functions
+    if (this.stopCircleAnimation && typeof this.stopCircleAnimation === 'function') {
+      this.stopCircleAnimation();
+      this.stopCircleAnimation = null;
+    }
+    if (this.stopSwipeAnimation && typeof this.stopSwipeAnimation === 'function') {
+      this.stopSwipeAnimation();
+      this.stopSwipeAnimation = null;
+    }
+    if (this.stopHoldAnimation && typeof this.stopHoldAnimation === 'function') {
+      this.stopHoldAnimation();
+      this.stopHoldAnimation = null;
+    }
+
+    // Remove any remaining game elements
+    const block = document.querySelector('#tap-and-swipe-block');
+    if (block) {
+      const bubbles = block.querySelectorAll('.bubble-container');
+      const lines = block.querySelectorAll('.line-container');
+
+      bubbles.forEach((bubble) => bubble.remove());
+      lines.forEach((line) => line.remove());
+    }
   }
 }
 
