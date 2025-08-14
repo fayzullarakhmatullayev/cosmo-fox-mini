@@ -51,10 +51,10 @@ class TapAndSwipeGame {
       },
       swipe: {
         // Phase 1: Line appearance
-        phase1Duration: 1.5,
+        phase1Duration: 0.3,
 
         // Phase 2: Color transition
-        phase2Duration: 2.5,
+        phase2Duration: 2.4,
 
         // Phase 3: Explosion effect
         phase3Duration: 0.034,
@@ -527,7 +527,10 @@ class TapAndSwipeGame {
 
   init() {
     this.isGameActive = true;
-    this.intervalId = setInterval(() => this.startGame(), this.speed);
+    this.intervalId = setInterval(() => {
+      this.startGame();
+      console.log(this.speed);
+    }, this.speed);
   }
 
   destroy() {
