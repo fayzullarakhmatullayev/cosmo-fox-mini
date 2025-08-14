@@ -34,3 +34,30 @@
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+.bubble-text {
+  --text-color: rgba(160, 214, 255, 1);
+
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-color);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  text-transform: uppercase;
+}
+
+.bubble-hold {
+  width: 46px;
+  height: 46px;
+  opacity: 1;
+  background: none;
+
+  .bubble-border {
+    width: 46px;
+    height: 46px;
+  }
+}
