@@ -911,7 +911,6 @@ class TapAndSwipeGame {
         console.log('Hold completed!');
         if (bubbleText) {
           bubbleText.textContent = 'DONE!';
-          bubbleText.style.color = 'rgba(100, 255, 100, 1)';
         }
         onHoldSuccess();
       }, holdDuration);
@@ -926,6 +925,7 @@ class TapAndSwipeGame {
       console.log('Stopping hold...');
       isHolding = false;
       bubbleContainer.classList.remove('holding');
+      bubbleBorder.style.borderColor = 'rgba(160, 214, 255, 1)';
 
       // Clear hold timer
       if (holdTimer) {
