@@ -832,6 +832,7 @@ class TapAndSwipeGame {
     let isHolding = false;
     let isMouseDown = false;
     let isTouchStarted = false;
+    let touchStartTime = 0;
     const holdDuration = 1500;
 
     // Store original styles for restoration
@@ -852,64 +853,65 @@ class TapAndSwipeGame {
     const startHold = () => {
       if (holdTimer || isHolding || isHoldCompleted()) return;
 
+      console.log('Starting hold...');
       isHolding = true;
       bubbleContainer.classList.add('holding');
 
+      // Immediate text and style changes for mobile
       if (bubbleText) {
         bubbleText.textContent = 'HOLDING';
+        // Direct style manipulation for immediate feedback on mobile
+        bubbleText.style.color = 'rgba(160, 214, 255, 1)';
+        bubbleText.style.setProperty('--text-color', 'rgba(160, 214, 255, 1)');
       }
 
-      // Pause main timeline
+      // Pause main timeline immediately
       if (tl && !tl.paused()) {
         tl.pause();
       }
 
-      // Immediate visual feedback
+      // Immediate visual changes without animation delays for mobile
+      bubble.style.backgroundColor = 'rgba(210, 217, 240, 0.7)';
+      bubble.style.boxShadow =
+        '0px 0px 6.3px 1px rgba(69, 194, 248, 1), inset 0px 0px 4px 0px rgba(69, 194, 248, 1)';
+
+      if (bubbleBorder) {
+        bubbleBorder.style.borderColor = 'rgba(160, 214, 255, 1)';
+      }
+
+      // Then apply smooth animations
       gsap.to(bubble, {
         width: 46,
         height: 46,
-        backgroundColor: 'rgba(210, 217, 240, 0.7)',
-        boxShadow:
-          '0px 0px 6.3px 1px rgba(69, 194, 248, 1), inset 0px 0px 4px 0px rgba(69, 194, 248, 1)',
-        duration: 0.2,
-        ease: 'back.out(1.7)'
+        duration: 0.15,
+        ease: 'back.out(1.7)',
+        force3D: true
       });
 
       if (bubbleBorder) {
         gsap.to(bubbleBorder, {
           width: 46,
           height: 46,
-          borderColor: 'rgba(160, 214, 255, 1)',
-          duration: 0.2,
-          ease: 'back.out(1.7)'
+          duration: 0.15,
+          ease: 'back.out(1.7)',
+          force3D: true
         });
       }
 
       if (turbulence) {
-        gsap.to(turbulence, {
-          attr: { seed: 0 },
-          duration: 0.2
-        });
+        gsap.set(turbulence, { attr: { seed: 0 } });
       }
 
       if (petals) {
-        gsap.to(petals, {
-          opacity: 0,
-          duration: 0.2
-        });
-      }
-
-      if (bubbleText) {
-        gsap.to(bubbleText, {
-          '--text-color': 'rgba(160, 214, 255, 1)',
-          duration: 0.2
-        });
+        gsap.set(petals, { opacity: 0 });
       }
 
       // Start hold timer
       holdTimer = setTimeout(() => {
+        console.log('Hold completed!');
         if (bubbleText) {
           bubbleText.textContent = 'DONE!';
+          bubbleText.style.color = 'rgba(100, 255, 100, 1)';
         }
         onHoldSuccess();
       }, holdDuration);
@@ -921,6 +923,7 @@ class TapAndSwipeGame {
     const stopHold = () => {
       if (!isHolding) return;
 
+      console.log('Stopping hold...');
       isHolding = false;
       bubbleContainer.classList.remove('holding');
 
@@ -936,35 +939,42 @@ class TapAndSwipeGame {
 
       if (bubbleText) {
         bubbleText.textContent = 'HOLD';
+        // Reset text color immediately
+        bubbleText.style.color = '';
+        bubbleText.style.setProperty('--text-color', 'rgba(255, 133, 133, 1)');
       }
 
       // Restore original appearance gradually
       if (!isHoldCompleted()) {
+        // Reset styles immediately first
+        bubble.style.backgroundColor = '';
+        bubble.style.boxShadow = '';
+        if (bubbleBorder) {
+          bubbleBorder.style.borderColor = '';
+        }
+
         gsap.to(bubble, {
           ...originalStyles.bubble,
-          duration: 0.3,
-          ease: 'power2.out'
+          duration: 0.25,
+          ease: 'power2.out',
+          force3D: true
         });
 
         if (bubbleBorder) {
           gsap.to(bubbleBorder, {
             ...originalStyles.border,
-            duration: 0.3,
-            ease: 'power2.out'
-          });
-        }
-
-        if (bubbleText) {
-          gsap.to(bubbleText, {
-            '--text-color': 'rgba(255, 133, 133, 1)',
-            duration: 0.3
+            duration: 0.25,
+            ease: 'power2.out',
+            force3D: true
           });
         }
 
         // Resume main timeline
-        if (tl && tl.paused()) {
-          tl.resume();
-        }
+        setTimeout(() => {
+          if (tl && tl.paused()) {
+            tl.resume();
+          }
+        }, 50);
       }
     };
 
@@ -978,6 +988,7 @@ class TapAndSwipeGame {
 
     const mouseUpHandler = (e) => {
       e.preventDefault();
+      e.stopPropagation();
       if (isMouseDown) {
         stopHold();
       }
@@ -991,16 +1002,50 @@ class TapAndSwipeGame {
       isMouseDown = false;
     };
 
-    // Touch event handlers
+    // Enhanced touch event handlers for mobile
     const touchStartHandler = (e) => {
       e.preventDefault();
       e.stopPropagation();
+
+      // Disable text selection and other touch behaviors
+      document.body.style.webkitUserSelect = 'none';
+      document.body.style.userSelect = 'none';
+
       isTouchStarted = true;
-      startHold();
+      touchStartTime = Date.now();
+
+      console.log('Touch started');
+
+      // Start hold immediately with minimal delay
+      requestAnimationFrame(() => {
+        startHold();
+      });
     };
 
     const touchEndHandler = (e) => {
       e.preventDefault();
+      e.stopPropagation();
+
+      console.log('Touch ended');
+
+      // Re-enable text selection
+      document.body.style.webkitUserSelect = '';
+      document.body.style.userSelect = '';
+
+      if (isTouchStarted) {
+        stopHold();
+      }
+      isTouchStarted = false;
+    };
+
+    const touchCancelHandler = (e) => {
+      e.preventDefault();
+      console.log('Touch cancelled');
+
+      // Re-enable text selection
+      document.body.style.webkitUserSelect = '';
+      document.body.style.userSelect = '';
+
       if (isTouchStarted) {
         stopHold();
       }
@@ -1009,19 +1054,28 @@ class TapAndSwipeGame {
 
     const touchMoveHandler = (e) => {
       e.preventDefault();
+      e.stopPropagation();
 
-      // Check if touch is still within bubble bounds
+      if (!isTouchStarted) return;
+
+      // Check if touch is still within bubble bounds with larger tolerance for mobile
       const touch = e.touches[0];
       if (touch) {
         const rect = bubbleContainer.getBoundingClientRect();
         const x = touch.clientX - rect.left;
         const y = touch.clientY - rect.top;
 
+        const tolerance = 20; // Larger tolerance for mobile
+
         // If touch moves outside bubble, stop holding
-        if (x < -10 || x > rect.width + 10 || y < -10 || y > rect.height + 10) {
-          if (isTouchStarted) {
-            stopHold();
-          }
+        if (
+          x < -tolerance ||
+          x > rect.width + tolerance ||
+          y < -tolerance ||
+          y > rect.height + tolerance
+        ) {
+          console.log('Touch moved outside bounds');
+          stopHold();
           isTouchStarted = false;
         }
       }
@@ -1033,20 +1087,46 @@ class TapAndSwipeGame {
     bubbleContainer._holdMouseLeaveHandler = mouseLeaveHandler;
     bubbleContainer._holdTouchStartHandler = touchStartHandler;
     bubbleContainer._holdTouchEndHandler = touchEndHandler;
+    bubbleContainer._holdTouchCancelHandler = touchCancelHandler;
     bubbleContainer._holdTouchMoveHandler = touchMoveHandler;
 
     // Store state for cleanup
     bubbleContainer._isHolding = () => isHolding;
     bubbleContainer._stopHold = stopHold;
 
-    // Add event listeners
+    // Add event listeners with optimized settings for mobile
     bubbleContainer.addEventListener('mousedown', mouseDownHandler, { passive: false });
     bubbleContainer.addEventListener('mouseup', mouseUpHandler, { passive: false });
     bubbleContainer.addEventListener('mouseleave', mouseLeaveHandler, { passive: false });
 
-    bubbleContainer.addEventListener('touchstart', touchStartHandler, { passive: false });
-    bubbleContainer.addEventListener('touchend', touchEndHandler, { passive: false });
-    bubbleContainer.addEventListener('touchmove', touchMoveHandler, { passive: false });
+    // Touch events with enhanced mobile handling
+    bubbleContainer.addEventListener('touchstart', touchStartHandler, {
+      passive: false,
+      capture: true
+    });
+    bubbleContainer.addEventListener('touchend', touchEndHandler, {
+      passive: false,
+      capture: true
+    });
+    bubbleContainer.addEventListener('touchcancel', touchCancelHandler, {
+      passive: false,
+      capture: true
+    });
+    bubbleContainer.addEventListener('touchmove', touchMoveHandler, {
+      passive: false,
+      capture: true
+    });
+
+    // Prevent context menu on long press for mobile
+    bubbleContainer.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+    });
+
+    // Add mobile-specific CSS for better touch handling
+    bubbleContainer.style.touchAction = 'none';
+    bubbleContainer.style.webkitTouchCallout = 'none';
+    bubbleContainer.style.webkitUserSelect = 'none';
+    bubbleContainer.style.userSelect = 'none';
   }
 
   playHoldSuccessAnimation({ bubble, bubbleText, bubbleBorder, onComplete }) {
@@ -1150,6 +1230,10 @@ class TapAndSwipeGame {
       bubbleContainer._mainTimeline = null;
     }
 
+    // Re-enable text selection
+    document.body.style.webkitUserSelect = '';
+    document.body.style.userSelect = '';
+
     // Remove mouse handlers
     if (bubbleContainer._holdMouseDownHandler) {
       bubbleContainer.removeEventListener('mousedown', bubbleContainer._holdMouseDownHandler);
@@ -1177,17 +1261,29 @@ class TapAndSwipeGame {
       delete bubbleContainer._holdTouchEndHandler;
     }
 
+    if (bubbleContainer._holdTouchCancelHandler) {
+      bubbleContainer.removeEventListener('touchcancel', bubbleContainer._holdTouchCancelHandler);
+      delete bubbleContainer._holdTouchCancelHandler;
+    }
+
     if (bubbleContainer._holdTouchMoveHandler) {
       bubbleContainer.removeEventListener('touchmove', bubbleContainer._holdTouchMoveHandler);
       delete bubbleContainer._holdTouchMoveHandler;
     }
 
+    // Remove context menu handler
+    bubbleContainer.removeEventListener('contextmenu', bubbleContainer._contextMenuHandler);
+
     // Clean up stored functions
     delete bubbleContainer._isHolding;
     delete bubbleContainer._stopHold;
 
-    // Remove holding class
+    // Remove holding class and reset styles
     bubbleContainer.classList.remove('holding');
+    bubbleContainer.style.touchAction = '';
+    bubbleContainer.style.webkitTouchCallout = '';
+    bubbleContainer.style.webkitUserSelect = '';
+    bubbleContainer.style.userSelect = '';
   }
 
   scheduleNextGame() {
