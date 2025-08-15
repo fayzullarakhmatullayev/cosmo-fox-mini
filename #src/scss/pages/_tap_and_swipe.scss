@@ -44,8 +44,8 @@
       height: 31px;
       position: absolute;
       top: -40px;
-      left: 41%;
-      transform: translateX(-50%);
+      right: 100%;
+      transform: translateX(50%);
       transition: left 1s ease-in-out;
       transition-delay: 0.2s;
     }

@@ -9,7 +9,7 @@ class TapAndSwipeGame {
 
     this.intervalId = null;
     this.speed = 1000;
-    this.states = [STATES.HOLD];
+    this.states = [STATES.HOLD, STATES.SWIPE, STATES.TAP];
     this.isGameActive = false;
     this.score = 0;
 
@@ -20,8 +20,20 @@ class TapAndSwipeGame {
     this.nextGameTimeout = null;
 
     this.currentState = null;
-
+    this.reactionTime = 0;
     this.animationSpeeds = INITIAL_SPEED;
+    this.rocketElement = document.querySelector('#rainbow-rocket');
+  }
+
+  animateRocket() {
+    const tl = gsap.timeline();
+    this.rocketElement.style.right = '0%';
+    tl.to(this.rocketElement, { right: '100%', duration: this.speed / 1000 });
+
+    this.reactionTime = Date.now();
+    this.rocketElement.animation = tl;
+
+    this.activeAnimations.push(tl);
   }
 
   createTapBubble() {
@@ -187,6 +199,7 @@ class TapAndSwipeGame {
       isClicked = true;
 
       tl.kill();
+      this.updateReactionTime();
 
       clickSuccessAnimation = this.playBubbleSuccessAnimation({
         bubble,
@@ -384,7 +397,7 @@ class TapAndSwipeGame {
         isInteracted = true;
 
         tl.kill();
-
+        this.updateReactionTime();
         successAnimation = this.playSwipeSuccessAnimation({
           line,
           lineContainer,
@@ -696,7 +709,6 @@ class TapAndSwipeGame {
     this.activeAnimations.push(tl);
     this.isAnimationRunning = true;
 
-    // Store timeline reference for hold handlers
     bubbleContainer._mainTimeline = tl;
 
     let holdCompleted = false;
@@ -715,6 +727,7 @@ class TapAndSwipeGame {
         holdCompleted = true;
 
         tl.kill();
+        this.updateReactionTime();
 
         holdSuccessAnimation = this.playHoldSuccessAnimation({
           bubble,
@@ -835,7 +848,6 @@ class TapAndSwipeGame {
     let touchStartTime = 0;
     const holdDuration = 1500;
 
-    // Store original styles for restoration
     const originalStyles = {
       bubble: {
         backgroundColor: gsap.getProperty(bubble, 'backgroundColor'),
@@ -867,6 +879,7 @@ class TapAndSwipeGame {
 
       // Pause main timeline immediately
       if (tl && !tl.paused()) {
+        this.rocketElement.animation?.pause();
         tl.pause();
       }
 
@@ -937,7 +950,7 @@ class TapAndSwipeGame {
         bubbleContainer._holdTimer = null;
       }
 
-      if (bubbleText) {
+      if (bubbleText && !isHoldCompleted()) {
         bubbleText.textContent = 'HOLD';
         // Reset text color immediately
         bubbleText.style.color = '';
@@ -972,6 +985,7 @@ class TapAndSwipeGame {
         // Resume main timeline
         setTimeout(() => {
           if (tl && tl.paused()) {
+            this.rocketElement.animation?.resume();
             tl.resume();
           }
         }, 50);
@@ -1016,7 +1030,6 @@ class TapAndSwipeGame {
 
       console.log('Touch started');
 
-      // Start hold immediately with minimal delay
       requestAnimationFrame(() => {
         startHold();
       });
@@ -1028,7 +1041,6 @@ class TapAndSwipeGame {
 
       console.log('Touch ended');
 
-      // Re-enable text selection
       document.body.style.webkitUserSelect = '';
       document.body.style.userSelect = '';
 
@@ -1304,6 +1316,13 @@ class TapAndSwipeGame {
     this.activeTimeouts.push(this.nextGameTimeout);
   }
 
+  updateReactionTime() {
+    gsap.to(this.rocketElement, { right: '0%', duration: 0.1 });
+    this.rocketElement.animation?.kill();
+    const current = Date.now();
+    this.reactionTime = current - this.reactionTime;
+  }
+
   startGame() {
     if (!this.isGameActive || this.isAnimationRunning) return;
 
@@ -1326,6 +1345,8 @@ class TapAndSwipeGame {
         break;
       }
     }
+
+    this.animateRocket();
 
     console.log(`Starting game state: ${this.currentState}`);
   }
@@ -1382,7 +1403,6 @@ class TapAndSwipeGame {
       this.stopHoldAnimation = null;
     }
 
-    // Remove any remaining game elements
     const block = document.querySelector('#tap-and-swipe-block');
     if (block) {
       const bubbles = block.querySelectorAll('.bubble-container');
@@ -1404,10 +1424,8 @@ class TapAndSwipeGame {
   }
 }
 
-// Export for use
 const tapAndSwipeGame = new TapAndSwipeGame();
 
-// Auto-initialize when DOM is ready
 if (typeof window !== 'undefined') {
   window.addEventListener('DOMContentLoaded', () => {
     tapAndSwipeGame.init();
