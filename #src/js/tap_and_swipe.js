@@ -78,9 +78,6 @@ class TapAndSwipeGame {
     const turbulence = bubbleContainer.querySelector(`#wavy-border feTurbulence`);
     const petals = bubbleContainer.querySelector('#burst');
 
-    let isClicked = false;
-    let clickSuccessAnimation = null;
-
     const tl = gsap.timeline({
       onComplete: () => {
         this.cleanupBubbleClickHandler(bubbleContainer);
@@ -92,49 +89,7 @@ class TapAndSwipeGame {
     this.activeAnimations.push(tl);
     this.isAnimationRunning = true;
 
-    const clickHandler = () => {
-      if (isClicked) return;
-      isClicked = true;
-
-      tl.kill();
-
-      clickSuccessAnimation = this.playBubbleSuccessAnimation({
-        bubble,
-        bubbleBorder,
-        onComplete: () => {
-          this.cleanupBubbleClickHandler(bubbleContainer);
-          this.isAnimationRunning = false;
-          if (onComplete) onComplete();
-        }
-      });
-    };
-
-    const touchStartHandler = (e) => {
-      e.preventDefault();
-      bubbleContainer._touchStarted = true;
-    };
-
-    const touchEndHandler = (e) => {
-      e.preventDefault();
-      if (bubbleContainer._touchStarted) {
-        clickHandler(e);
-      }
-      bubbleContainer._touchStarted = false;
-    };
-
-    const touchMoveHandler = (e) => {
-      bubbleContainer._touchStarted = false;
-    };
-
-    bubbleContainer._clickHandler = clickHandler;
-    bubbleContainer._touchStartHandler = touchStartHandler;
-    bubbleContainer._touchEndHandler = touchEndHandler;
-    bubbleContainer._touchMoveHandler = touchMoveHandler;
-
-    bubbleContainer.addEventListener('click', clickHandler);
-    bubbleContainer.addEventListener('touchstart', touchStartHandler, { passive: false });
-    bubbleContainer.addEventListener('touchend', touchEndHandler, { passive: false });
-    bubbleContainer.addEventListener('touchmove', touchMoveHandler, { passive: false });
+    this.addTapHandler({ bubble, bubbleContainer, bubbleBorder, onComplete, tl });
 
     tl.to(bubble, {
       width: 46,
@@ -215,6 +170,55 @@ class TapAndSwipeGame {
         }
       }
     });
+  }
+
+  addTapHandler({ bubble, bubbleContainer, bubbleBorder, onComplete, tl }) {
+    let isClicked = false;
+    let clickSuccessAnimation = null;
+
+    const clickHandler = () => {
+      if (isClicked) return;
+      isClicked = true;
+
+      tl.kill();
+
+      clickSuccessAnimation = this.playBubbleSuccessAnimation({
+        bubble,
+        bubbleBorder,
+        onComplete: () => {
+          this.cleanupBubbleClickHandler(bubbleContainer);
+          this.isAnimationRunning = false;
+          if (onComplete) onComplete();
+        }
+      });
+    };
+
+    const touchStartHandler = (e) => {
+      e.preventDefault();
+      bubbleContainer._touchStarted = true;
+    };
+
+    const touchEndHandler = (e) => {
+      e.preventDefault();
+      if (bubbleContainer._touchStarted) {
+        clickHandler(e);
+      }
+      bubbleContainer._touchStarted = false;
+    };
+
+    const touchMoveHandler = (e) => {
+      bubbleContainer._touchStarted = false;
+    };
+
+    bubbleContainer._clickHandler = clickHandler;
+    bubbleContainer._touchStartHandler = touchStartHandler;
+    bubbleContainer._touchEndHandler = touchEndHandler;
+    bubbleContainer._touchMoveHandler = touchMoveHandler;
+
+    bubbleContainer.addEventListener('click', clickHandler);
+    bubbleContainer.addEventListener('touchstart', touchStartHandler, { passive: false });
+    bubbleContainer.addEventListener('touchend', touchEndHandler, { passive: false });
+    bubbleContainer.addEventListener('touchmove', touchMoveHandler, { passive: false });
   }
 
   playBubbleSuccessAnimation({ bubble, bubbleBorder, onComplete }) {
@@ -352,6 +356,7 @@ class TapAndSwipeGame {
 
     const tl = gsap.timeline({
       onComplete: () => {
+        this.cleanupSwipeHandlers(lineContainer);
         this.isAnimationRunning = false;
         if (onComplete) onComplete();
       }
@@ -359,6 +364,29 @@ class TapAndSwipeGame {
 
     this.activeAnimations.push(tl);
     this.isAnimationRunning = true;
+
+    let isInteracted = false;
+    let successAnimation = null;
+
+    this.addSwipeHandlers(lineContainer, {
+      onSwipeSuccess: () => {
+        if (isInteracted) return; // Prevent multiple interactions
+        isInteracted = true;
+
+        tl.kill();
+
+        successAnimation = this.playSwipeSuccessAnimation({
+          line,
+          lineContainer,
+          onComplete: () => {
+            // Clean up and call completion callback
+            this.cleanupSwipeHandlers(lineContainer);
+            this.isAnimationRunning = false;
+            if (onComplete) onComplete();
+          }
+        });
+      }
+    });
 
     tl.to(line, {
       opacity: 1,
@@ -411,6 +439,181 @@ class TapAndSwipeGame {
         });
       }
     });
+  }
+
+  addSwipeHandlers(lineContainer, { onSwipeSuccess }) {
+    let startX = 0;
+    let startY = 0;
+    let isMouseDown = false;
+    let isTouchStarted = false;
+
+    const minSwipeDistance = 30;
+
+    const mouseDownHandler = (e) => {
+      isMouseDown = true;
+      startX = e.clientX;
+      startY = e.clientY;
+    };
+
+    const mouseMoveHandler = (e) => {
+      if (!isMouseDown) return;
+
+      const deltaX = Math.abs(e.clientX - startX);
+      const deltaY = Math.abs(e.clientY - startY);
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+      if (distance >= minSwipeDistance) {
+        onSwipeSuccess();
+        isMouseDown = false;
+      }
+    };
+
+    const mouseUpHandler = (e) => {
+      if (isMouseDown) {
+        onSwipeSuccess();
+      }
+      isMouseDown = false;
+    };
+
+    // Touch event handlers
+    const touchStartHandler = (e) => {
+      e.preventDefault();
+      isTouchStarted = true;
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+    };
+
+    const touchMoveHandler = (e) => {
+      e.preventDefault();
+      if (!isTouchStarted) return;
+
+      const touch = e.touches[0];
+      const deltaX = Math.abs(touch.clientX - startX);
+      const deltaY = Math.abs(touch.clientY - startY);
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+      if (distance >= minSwipeDistance) {
+        onSwipeSuccess();
+        isTouchStarted = false;
+      }
+    };
+
+    const touchEndHandler = (e) => {
+      e.preventDefault();
+      // Touch end without sufficient swipe distance also counts as success
+      if (isTouchStarted) {
+        onSwipeSuccess();
+      }
+      isTouchStarted = false;
+    };
+
+    // Store handlers for cleanup
+    lineContainer._mouseDownHandler = mouseDownHandler;
+    lineContainer._mouseMoveHandler = mouseMoveHandler;
+    lineContainer._mouseUpHandler = mouseUpHandler;
+    lineContainer._touchStartHandler = touchStartHandler;
+    lineContainer._touchMoveHandler = touchMoveHandler;
+    lineContainer._touchEndHandler = touchEndHandler;
+
+    // Add event listeners
+    lineContainer.addEventListener('mousedown', mouseDownHandler);
+    lineContainer.addEventListener('mousemove', mouseMoveHandler);
+    lineContainer.addEventListener('mouseup', mouseUpHandler);
+    lineContainer.addEventListener('mouseleave', mouseUpHandler); // Trigger on mouse leave too
+
+    lineContainer.addEventListener('touchstart', touchStartHandler, { passive: false });
+    lineContainer.addEventListener('touchmove', touchMoveHandler, { passive: false });
+    lineContainer.addEventListener('touchend', touchEndHandler, { passive: false });
+  }
+
+  playSwipeSuccessAnimation({ line, lineContainer, onComplete }) {
+    const successTl = gsap.timeline({
+      onComplete: () => {
+        if (onComplete) onComplete();
+      }
+    });
+
+    this.activeAnimations.push(successTl);
+
+    successTl.to(line, {
+      scaleY: 1.3,
+      scaleX: 1.2,
+      duration: 0.1,
+      ease: 'back.out(2)',
+      onStart: () => {
+        gsap.to(lineContainer, {
+          '--shadow': '0px -8px 20px 4px rgba(179, 210, 235, 1)',
+          duration: 0.1
+        });
+
+        gsap.to(line, {
+          '--start': 'rgba(179, 210, 235, 1)',
+          '--mid': 'rgba(179, 210, 235, 0.4)',
+          '--end': 'rgba(179, 210, 235, 0)',
+          duration: 0.1
+        });
+      }
+    });
+
+    successTl.to({}, { duration: 0.15 });
+
+    successTl.to(line, {
+      opacity: 0,
+      scaleY: 0.5,
+      scaleX: 2,
+      duration: 0.2,
+      ease: 'power2.in'
+    });
+
+    successTl.to(
+      lineContainer,
+      {
+        '--shadow': '0px 0px 0px 0px rgba(179, 210, 235, 1)',
+        duration: 0.2,
+        ease: 'power2.in'
+      },
+      '-=0.2'
+    );
+
+    return successTl;
+  }
+
+  cleanupSwipeHandlers(lineContainer) {
+    if (lineContainer) {
+      // Remove mouse handlers
+      if (lineContainer._mouseDownHandler) {
+        lineContainer.removeEventListener('mousedown', lineContainer._mouseDownHandler);
+        delete lineContainer._mouseDownHandler;
+      }
+
+      if (lineContainer._mouseMoveHandler) {
+        lineContainer.removeEventListener('mousemove', lineContainer._mouseMoveHandler);
+        delete lineContainer._mouseMoveHandler;
+      }
+
+      if (lineContainer._mouseUpHandler) {
+        lineContainer.removeEventListener('mouseup', lineContainer._mouseUpHandler);
+        lineContainer.removeEventListener('mouseleave', lineContainer._mouseUpHandler);
+        delete lineContainer._mouseUpHandler;
+      }
+
+      // Remove touch handlers
+      if (lineContainer._touchStartHandler) {
+        lineContainer.removeEventListener('touchstart', lineContainer._touchStartHandler);
+        delete lineContainer._touchStartHandler;
+      }
+
+      if (lineContainer._touchMoveHandler) {
+        lineContainer.removeEventListener('touchmove', lineContainer._touchMoveHandler);
+        delete lineContainer._touchMoveHandler;
+      }
+
+      if (lineContainer._touchEndHandler) {
+        lineContainer.removeEventListener('touchend', lineContainer._touchEndHandler);
+        delete lineContainer._touchEndHandler;
+      }
+    }
   }
 
   createHold() {
