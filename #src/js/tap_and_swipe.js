@@ -101,7 +101,6 @@ class TapAndSwipeGame {
       clickSuccessAnimation = this.playBubbleSuccessAnimation({
         bubble,
         bubbleBorder,
-        petals,
         onComplete: () => {
           this.cleanupBubbleClickHandler(bubbleContainer);
           this.isAnimationRunning = false;
@@ -218,7 +217,7 @@ class TapAndSwipeGame {
     });
   }
 
-  playBubbleSuccessAnimation({ bubble, bubbleBorder, petals, onComplete }) {
+  playBubbleSuccessAnimation({ bubble, bubbleBorder, onComplete }) {
     const successTl = gsap.timeline({
       onComplete: () => {
         if (onComplete) onComplete();
@@ -237,24 +236,24 @@ class TapAndSwipeGame {
       ease: 'back.out(2)'
     });
 
-    successTl.to(
-      bubbleBorder,
-      {
-        width: 46,
-        height: 46,
-        borderColor: 'rgba(223,245,255, 1)',
-        duration: 0.1,
-        ease: 'back.out(2)'
-      },
-      0
-    );
-
-    successTl.to(bubble, {
-      opacity: 0,
-      scale: 0.5,
-      duration: 0.2,
-      ease: 'power2.in'
+    successTl.to(bubbleBorder, {
+      width: 46,
+      height: 46,
+      borderColor: 'rgba(223,245,255, 1)',
+      duration: 0.01,
+      ease: 'back.out(2)'
     });
+
+    successTl.to(
+      bubble,
+      {
+        opacity: 0,
+        scale: 0.5,
+        duration: 0.2,
+        ease: 'power2.in'
+      },
+      '-=0.2'
+    );
 
     successTl.to(
       bubbleBorder,
