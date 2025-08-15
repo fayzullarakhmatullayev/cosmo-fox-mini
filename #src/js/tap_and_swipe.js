@@ -9,7 +9,7 @@ class TapAndSwipeGame {
 
     this.intervalId = null;
     this.speed = 1000;
-    this.states = [STATES.TAP];
+    this.states = [STATES.TAP, STATES.SWIPE, STATES.HOLD];
     this.isGameActive = false;
     this.score = 0;
 
