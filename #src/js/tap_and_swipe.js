@@ -9,7 +9,7 @@ class TapAndSwipeGame {
 
     this.intervalId = null;
     this.speed = 1000;
-    this.states = [STATES.HOLD, STATES.SWIPE, STATES.TAP];
+    this.states = [STATES.TAP];
     this.isGameActive = false;
     this.score = 0;
 
@@ -76,10 +76,14 @@ class TapAndSwipeGame {
     const bubble = bubbleContainer.querySelector('.bubble');
     const bubbleBorder = bubbleContainer.querySelector('.bubble-border');
     const turbulence = bubbleContainer.querySelector(`#wavy-border feTurbulence`);
-
     const petals = bubbleContainer.querySelector('#burst');
+
+    let isClicked = false;
+    let clickSuccessAnimation = null;
+
     const tl = gsap.timeline({
       onComplete: () => {
+        this.cleanupBubbleClickHandler(bubbleContainer);
         this.isAnimationRunning = false;
         if (onComplete) onComplete();
       }
@@ -87,6 +91,51 @@ class TapAndSwipeGame {
 
     this.activeAnimations.push(tl);
     this.isAnimationRunning = true;
+
+    const clickHandler = () => {
+      if (isClicked) return;
+      isClicked = true;
+
+      tl.kill();
+
+      clickSuccessAnimation = this.playBubbleSuccessAnimation({
+        bubble,
+        bubbleBorder,
+        petals,
+        onComplete: () => {
+          this.cleanupBubbleClickHandler(bubbleContainer);
+          this.isAnimationRunning = false;
+          if (onComplete) onComplete();
+        }
+      });
+    };
+
+    const touchStartHandler = (e) => {
+      e.preventDefault();
+      bubbleContainer._touchStarted = true;
+    };
+
+    const touchEndHandler = (e) => {
+      e.preventDefault();
+      if (bubbleContainer._touchStarted) {
+        clickHandler(e);
+      }
+      bubbleContainer._touchStarted = false;
+    };
+
+    const touchMoveHandler = (e) => {
+      bubbleContainer._touchStarted = false;
+    };
+
+    bubbleContainer._clickHandler = clickHandler;
+    bubbleContainer._touchStartHandler = touchStartHandler;
+    bubbleContainer._touchEndHandler = touchEndHandler;
+    bubbleContainer._touchMoveHandler = touchMoveHandler;
+
+    bubbleContainer.addEventListener('click', clickHandler);
+    bubbleContainer.addEventListener('touchstart', touchStartHandler, { passive: false });
+    bubbleContainer.addEventListener('touchend', touchEndHandler, { passive: false });
+    bubbleContainer.addEventListener('touchmove', touchMoveHandler, { passive: false });
 
     tl.to(bubble, {
       width: 46,
@@ -167,6 +216,86 @@ class TapAndSwipeGame {
         }
       }
     });
+  }
+
+  playBubbleSuccessAnimation({ bubble, bubbleBorder, petals, onComplete }) {
+    const successTl = gsap.timeline({
+      onComplete: () => {
+        if (onComplete) onComplete();
+      }
+    });
+
+    this.activeAnimations.push(successTl);
+
+    successTl.to(bubble, {
+      width: 46,
+      height: 46,
+      backgroundColor: 'rgba(210, 217, 240, 0.7)',
+      boxShadow:
+        '0px 0px 6.3px 1px rgba(69, 194, 248, 1), inset 0px 0px 4px 0px rgba(69, 194, 248, 1)',
+      duration: 0.1,
+      ease: 'back.out(2)'
+    });
+
+    successTl.to(
+      bubbleBorder,
+      {
+        width: 46,
+        height: 46,
+        borderColor: 'rgba(223,245,255, 1)',
+        duration: 0.1,
+        ease: 'back.out(2)'
+      },
+      0
+    );
+
+    successTl.to(bubble, {
+      opacity: 0,
+      scale: 0.5,
+      duration: 0.2,
+      ease: 'power2.in'
+    });
+
+    successTl.to(
+      bubbleBorder,
+      {
+        opacity: 0,
+        scale: 0.5,
+        duration: 0.2,
+        ease: 'power2.in'
+      },
+      '-=0.2'
+    );
+
+    return successTl;
+  }
+
+  cleanupBubbleClickHandler(bubbleContainer) {
+    if (bubbleContainer) {
+      // Remove click handler
+      if (bubbleContainer._clickHandler) {
+        bubbleContainer.removeEventListener('click', bubbleContainer._clickHandler);
+        delete bubbleContainer._clickHandler;
+      }
+
+      // Remove touch handlers
+      if (bubbleContainer._touchStartHandler) {
+        bubbleContainer.removeEventListener('touchstart', bubbleContainer._touchStartHandler);
+        delete bubbleContainer._touchStartHandler;
+      }
+
+      if (bubbleContainer._touchEndHandler) {
+        bubbleContainer.removeEventListener('touchend', bubbleContainer._touchEndHandler);
+        delete bubbleContainer._touchEndHandler;
+      }
+
+      if (bubbleContainer._touchMoveHandler) {
+        bubbleContainer.removeEventListener('touchmove', bubbleContainer._touchMoveHandler);
+        delete bubbleContainer._touchMoveHandler;
+      }
+
+      delete bubbleContainer._touchStarted;
+    }
   }
 
   createSwipe() {
@@ -438,15 +567,13 @@ class TapAndSwipeGame {
   scheduleNextGame() {
     if (!this.isGameActive) return;
 
-    // Clear any existing timeout
     if (this.nextGameTimeout) {
       clearTimeout(this.nextGameTimeout);
     }
 
-    // Schedule the next game element to appear after a delay
     this.nextGameTimeout = setTimeout(() => {
       this.startGame();
-    }, 500); // 500ms delay between animations, adjust as needed
+    }, 500);
 
     this.activeTimeouts.push(this.nextGameTimeout);
   }
@@ -523,7 +650,10 @@ class TapAndSwipeGame {
       const bubbles = block.querySelectorAll('.bubble-container');
       const lines = block.querySelectorAll('.line-container');
 
-      bubbles.forEach((bubble) => bubble.remove());
+      bubbles.forEach((bubble) => {
+        this.cleanupBubbleClickHandler(bubble);
+        bubble.remove();
+      });
       lines.forEach((line) => line.remove());
     }
   }
