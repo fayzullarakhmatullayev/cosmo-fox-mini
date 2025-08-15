@@ -9,7 +9,7 @@ class TapAndSwipeGame {
 
     this.intervalId = null;
     this.speed = 1000;
-    this.states = [STATES.TAP, STATES.SWIPE, STATES.HOLD];
+    this.states = [STATES.HOLD];
     this.isGameActive = false;
     this.score = 0;
 
@@ -56,6 +56,7 @@ class TapAndSwipeGame {
 
     const circleTimeout = setTimeout(() => {
       if (bubbleContainer.parentNode) {
+        this.cleanupBubbleClickHandler(bubbleContainer);
         bubbleContainer.remove();
       }
     }, this.speed * 4);
@@ -73,6 +74,8 @@ class TapAndSwipeGame {
 
   animateBubbleTap({ id, onComplete }) {
     const bubbleContainer = document.querySelector(`#${id}`);
+    if (!bubbleContainer) return;
+
     const bubble = bubbleContainer.querySelector('.bubble');
     const bubbleBorder = bubbleContainer.querySelector('.bubble-border');
     const turbulence = bubbleContainer.querySelector(`#wavy-border feTurbulence`);
@@ -176,7 +179,10 @@ class TapAndSwipeGame {
     let isClicked = false;
     let clickSuccessAnimation = null;
 
-    const clickHandler = () => {
+    const clickHandler = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
       if (isClicked) return;
       isClicked = true;
 
@@ -207,6 +213,7 @@ class TapAndSwipeGame {
     };
 
     const touchMoveHandler = (e) => {
+      e.preventDefault();
       bubbleContainer._touchStarted = false;
     };
 
@@ -274,31 +281,31 @@ class TapAndSwipeGame {
   }
 
   cleanupBubbleClickHandler(bubbleContainer) {
-    if (bubbleContainer) {
-      // Remove click handler
-      if (bubbleContainer._clickHandler) {
-        bubbleContainer.removeEventListener('click', bubbleContainer._clickHandler);
-        delete bubbleContainer._clickHandler;
-      }
+    if (!bubbleContainer) return;
 
-      // Remove touch handlers
-      if (bubbleContainer._touchStartHandler) {
-        bubbleContainer.removeEventListener('touchstart', bubbleContainer._touchStartHandler);
-        delete bubbleContainer._touchStartHandler;
-      }
-
-      if (bubbleContainer._touchEndHandler) {
-        bubbleContainer.removeEventListener('touchend', bubbleContainer._touchEndHandler);
-        delete bubbleContainer._touchEndHandler;
-      }
-
-      if (bubbleContainer._touchMoveHandler) {
-        bubbleContainer.removeEventListener('touchmove', bubbleContainer._touchMoveHandler);
-        delete bubbleContainer._touchMoveHandler;
-      }
-
-      delete bubbleContainer._touchStarted;
+    // Remove click handler
+    if (bubbleContainer._clickHandler) {
+      bubbleContainer.removeEventListener('click', bubbleContainer._clickHandler);
+      delete bubbleContainer._clickHandler;
     }
+
+    // Remove touch handlers
+    if (bubbleContainer._touchStartHandler) {
+      bubbleContainer.removeEventListener('touchstart', bubbleContainer._touchStartHandler);
+      delete bubbleContainer._touchStartHandler;
+    }
+
+    if (bubbleContainer._touchEndHandler) {
+      bubbleContainer.removeEventListener('touchend', bubbleContainer._touchEndHandler);
+      delete bubbleContainer._touchEndHandler;
+    }
+
+    if (bubbleContainer._touchMoveHandler) {
+      bubbleContainer.removeEventListener('touchmove', bubbleContainer._touchMoveHandler);
+      delete bubbleContainer._touchMoveHandler;
+    }
+
+    delete bubbleContainer._touchStarted;
   }
 
   createSwipe() {
@@ -333,6 +340,7 @@ class TapAndSwipeGame {
 
     const swipeTimeout = setTimeout(() => {
       if (lineContainer.parentNode) {
+        this.cleanupSwipeHandlers(lineContainer);
         lineContainer.remove();
       }
     }, this.speed * 4);
@@ -350,6 +358,8 @@ class TapAndSwipeGame {
 
   animateSwipe({ id, onComplete }) {
     const lineContainer = document.querySelector(`#${id}`);
+    if (!lineContainer) return;
+
     const line = lineContainer.querySelector('.line');
     const wave = lineContainer.querySelector('#wave');
     const splash = lineContainer.querySelector('#splash');
@@ -370,7 +380,7 @@ class TapAndSwipeGame {
 
     this.addSwipeHandlers(lineContainer, {
       onSwipeSuccess: () => {
-        if (isInteracted) return; // Prevent multiple interactions
+        if (isInteracted) return;
         isInteracted = true;
 
         tl.kill();
@@ -379,7 +389,6 @@ class TapAndSwipeGame {
           line,
           lineContainer,
           onComplete: () => {
-            // Clean up and call completion callback
             this.cleanupSwipeHandlers(lineContainer);
             this.isAnimationRunning = false;
             if (onComplete) onComplete();
@@ -450,6 +459,7 @@ class TapAndSwipeGame {
     const minSwipeDistance = 30;
 
     const mouseDownHandler = (e) => {
+      e.preventDefault();
       isMouseDown = true;
       startX = e.clientX;
       startY = e.clientY;
@@ -457,6 +467,7 @@ class TapAndSwipeGame {
 
     const mouseMoveHandler = (e) => {
       if (!isMouseDown) return;
+      e.preventDefault();
 
       const deltaX = Math.abs(e.clientX - startX);
       const deltaY = Math.abs(e.clientY - startY);
@@ -469,6 +480,7 @@ class TapAndSwipeGame {
     };
 
     const mouseUpHandler = (e) => {
+      e.preventDefault();
       if (isMouseDown) {
         onSwipeSuccess();
       }
@@ -501,7 +513,6 @@ class TapAndSwipeGame {
 
     const touchEndHandler = (e) => {
       e.preventDefault();
-      // Touch end without sufficient swipe distance also counts as success
       if (isTouchStarted) {
         onSwipeSuccess();
       }
@@ -520,7 +531,7 @@ class TapAndSwipeGame {
     lineContainer.addEventListener('mousedown', mouseDownHandler);
     lineContainer.addEventListener('mousemove', mouseMoveHandler);
     lineContainer.addEventListener('mouseup', mouseUpHandler);
-    lineContainer.addEventListener('mouseleave', mouseUpHandler); // Trigger on mouse leave too
+    lineContainer.addEventListener('mouseleave', mouseUpHandler);
 
     lineContainer.addEventListener('touchstart', touchStartHandler, { passive: false });
     lineContainer.addEventListener('touchmove', touchMoveHandler, { passive: false });
@@ -580,39 +591,39 @@ class TapAndSwipeGame {
   }
 
   cleanupSwipeHandlers(lineContainer) {
-    if (lineContainer) {
-      // Remove mouse handlers
-      if (lineContainer._mouseDownHandler) {
-        lineContainer.removeEventListener('mousedown', lineContainer._mouseDownHandler);
-        delete lineContainer._mouseDownHandler;
-      }
+    if (!lineContainer) return;
 
-      if (lineContainer._mouseMoveHandler) {
-        lineContainer.removeEventListener('mousemove', lineContainer._mouseMoveHandler);
-        delete lineContainer._mouseMoveHandler;
-      }
+    // Remove mouse handlers
+    if (lineContainer._mouseDownHandler) {
+      lineContainer.removeEventListener('mousedown', lineContainer._mouseDownHandler);
+      delete lineContainer._mouseDownHandler;
+    }
 
-      if (lineContainer._mouseUpHandler) {
-        lineContainer.removeEventListener('mouseup', lineContainer._mouseUpHandler);
-        lineContainer.removeEventListener('mouseleave', lineContainer._mouseUpHandler);
-        delete lineContainer._mouseUpHandler;
-      }
+    if (lineContainer._mouseMoveHandler) {
+      lineContainer.removeEventListener('mousemove', lineContainer._mouseMoveHandler);
+      delete lineContainer._mouseMoveHandler;
+    }
 
-      // Remove touch handlers
-      if (lineContainer._touchStartHandler) {
-        lineContainer.removeEventListener('touchstart', lineContainer._touchStartHandler);
-        delete lineContainer._touchStartHandler;
-      }
+    if (lineContainer._mouseUpHandler) {
+      lineContainer.removeEventListener('mouseup', lineContainer._mouseUpHandler);
+      lineContainer.removeEventListener('mouseleave', lineContainer._mouseUpHandler);
+      delete lineContainer._mouseUpHandler;
+    }
 
-      if (lineContainer._touchMoveHandler) {
-        lineContainer.removeEventListener('touchmove', lineContainer._touchMoveHandler);
-        delete lineContainer._touchMoveHandler;
-      }
+    // Remove touch handlers
+    if (lineContainer._touchStartHandler) {
+      lineContainer.removeEventListener('touchstart', lineContainer._touchStartHandler);
+      delete lineContainer._touchStartHandler;
+    }
 
-      if (lineContainer._touchEndHandler) {
-        lineContainer.removeEventListener('touchend', lineContainer._touchEndHandler);
-        delete lineContainer._touchEndHandler;
-      }
+    if (lineContainer._touchMoveHandler) {
+      lineContainer.removeEventListener('touchmove', lineContainer._touchMoveHandler);
+      delete lineContainer._touchMoveHandler;
+    }
+
+    if (lineContainer._touchEndHandler) {
+      lineContainer.removeEventListener('touchend', lineContainer._touchEndHandler);
+      delete lineContainer._touchEndHandler;
     }
   }
 
@@ -648,6 +659,7 @@ class TapAndSwipeGame {
 
     const circleTimeout = setTimeout(() => {
       if (bubbleContainer.parentNode) {
+        this.cleanupHoldHandlers(bubbleContainer);
         bubbleContainer.remove();
       }
     }, this.speed * 4);
@@ -665,14 +677,17 @@ class TapAndSwipeGame {
 
   animateHold({ id, onComplete }) {
     const bubbleContainer = document.querySelector(`#${id}`);
+    if (!bubbleContainer) return;
+
     const bubble = bubbleContainer.querySelector('.bubble');
     const bubbleText = bubbleContainer.querySelector('.bubble-text');
     const bubbleBorder = bubbleContainer.querySelector('.bubble-border');
     const turbulence = bubbleContainer.querySelector(`#wavy-border feTurbulence`);
-
     const petals = bubbleContainer.querySelector('#burst');
+
     const tl = gsap.timeline({
       onComplete: () => {
+        this.cleanupHoldHandlers(bubbleContainer);
         this.isAnimationRunning = false;
         if (onComplete) onComplete();
       }
@@ -680,6 +695,40 @@ class TapAndSwipeGame {
 
     this.activeAnimations.push(tl);
     this.isAnimationRunning = true;
+
+    // Store timeline reference for hold handlers
+    bubbleContainer._mainTimeline = tl;
+
+    let holdCompleted = false;
+    let holdSuccessAnimation = null;
+
+    this.addHoldHandlers({
+      bubbleContainer,
+      bubble,
+      bubbleBorder,
+      bubbleText,
+      turbulence,
+      petals,
+      tl,
+      onHoldSuccess: () => {
+        if (holdCompleted) return;
+        holdCompleted = true;
+
+        tl.kill();
+
+        holdSuccessAnimation = this.playHoldSuccessAnimation({
+          bubble,
+          bubbleText,
+          bubbleBorder,
+          onComplete: () => {
+            this.cleanupHoldHandlers(bubbleContainer);
+            this.isAnimationRunning = false;
+            if (onComplete) onComplete();
+          }
+        });
+      },
+      isHoldCompleted: () => holdCompleted
+    });
 
     tl.to(bubble, {
       width: 46,
@@ -718,10 +767,12 @@ class TapAndSwipeGame {
             duration: this.animationSpeeds.bubble.phase2BorderDuration,
             ease: 'none'
           });
-          gsap.to(bubbleText, {
-            '--text-color': 'rgba(255, 133, 133, 1)',
-            duration: this.animationSpeeds.bubble.phase2BorderDuration
-          });
+          if (bubbleText) {
+            gsap.to(bubbleText, {
+              '--text-color': 'rgba(255, 133, 133, 1)',
+              duration: this.animationSpeeds.bubble.phase2BorderDuration
+            });
+          }
         }
       }
     });
@@ -766,11 +817,388 @@ class TapAndSwipeGame {
     });
   }
 
+  addHoldHandlers({
+    bubbleContainer,
+    bubble,
+    bubbleText,
+    bubbleBorder,
+    turbulence,
+    petals,
+    tl,
+    onHoldSuccess,
+    isHoldCompleted
+  }) {
+    let holdTimer = null;
+    let isHolding = false;
+    let isMouseDown = false;
+    let isTouchStarted = false;
+    const holdDuration = 1500;
+
+    // Store original styles for restoration
+    const originalStyles = {
+      bubble: {
+        backgroundColor: gsap.getProperty(bubble, 'backgroundColor'),
+        boxShadow: gsap.getProperty(bubble, 'boxShadow'),
+        width: gsap.getProperty(bubble, 'width'),
+        height: gsap.getProperty(bubble, 'height')
+      },
+      border: {
+        borderColor: gsap.getProperty(bubbleBorder, 'borderColor'),
+        width: gsap.getProperty(bubbleBorder, 'width'),
+        height: gsap.getProperty(bubbleBorder, 'height')
+      }
+    };
+
+    const startHold = () => {
+      if (holdTimer || isHolding || isHoldCompleted()) return;
+
+      isHolding = true;
+      bubbleContainer.classList.add('holding');
+
+      if (bubbleText) {
+        bubbleText.textContent = 'HOLDING';
+      }
+
+      // Pause main timeline
+      if (tl && !tl.paused()) {
+        tl.pause();
+      }
+
+      // Immediate visual feedback
+      gsap.to(bubble, {
+        width: 46,
+        height: 46,
+        backgroundColor: 'rgba(210, 217, 240, 0.7)',
+        boxShadow:
+          '0px 0px 6.3px 1px rgba(69, 194, 248, 1), inset 0px 0px 4px 0px rgba(69, 194, 248, 1)',
+        duration: 0.2,
+        ease: 'back.out(1.7)'
+      });
+
+      if (bubbleBorder) {
+        gsap.to(bubbleBorder, {
+          width: 46,
+          height: 46,
+          borderColor: 'rgba(160, 214, 255, 1)',
+          duration: 0.2,
+          ease: 'back.out(1.7)'
+        });
+      }
+
+      if (turbulence) {
+        gsap.to(turbulence, {
+          attr: { seed: 0 },
+          duration: 0.2
+        });
+      }
+
+      if (petals) {
+        gsap.to(petals, {
+          opacity: 0,
+          duration: 0.2
+        });
+      }
+
+      if (bubbleText) {
+        gsap.to(bubbleText, {
+          '--text-color': 'rgba(160, 214, 255, 1)',
+          duration: 0.2
+        });
+      }
+
+      // Start hold timer
+      holdTimer = setTimeout(() => {
+        if (bubbleText) {
+          bubbleText.textContent = 'DONE!';
+        }
+        onHoldSuccess();
+      }, holdDuration);
+
+      // Store timer reference for cleanup
+      bubbleContainer._holdTimer = holdTimer;
+    };
+
+    const stopHold = () => {
+      if (!isHolding) return;
+
+      isHolding = false;
+      bubbleContainer.classList.remove('holding');
+
+      // Clear hold timer
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+      if (bubbleContainer._holdTimer) {
+        clearTimeout(bubbleContainer._holdTimer);
+        bubbleContainer._holdTimer = null;
+      }
+
+      if (bubbleText) {
+        bubbleText.textContent = 'HOLD';
+      }
+
+      // Restore original appearance gradually
+      if (!isHoldCompleted()) {
+        gsap.to(bubble, {
+          ...originalStyles.bubble,
+          duration: 0.3,
+          ease: 'power2.out'
+        });
+
+        if (bubbleBorder) {
+          gsap.to(bubbleBorder, {
+            ...originalStyles.border,
+            duration: 0.3,
+            ease: 'power2.out'
+          });
+        }
+
+        if (bubbleText) {
+          gsap.to(bubbleText, {
+            '--text-color': 'rgba(255, 133, 133, 1)',
+            duration: 0.3
+          });
+        }
+
+        // Resume main timeline
+        if (tl && tl.paused()) {
+          tl.resume();
+        }
+      }
+    };
+
+    // Mouse event handlers
+    const mouseDownHandler = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      isMouseDown = true;
+      startHold();
+    };
+
+    const mouseUpHandler = (e) => {
+      e.preventDefault();
+      if (isMouseDown) {
+        stopHold();
+      }
+      isMouseDown = false;
+    };
+
+    const mouseLeaveHandler = (e) => {
+      if (isMouseDown) {
+        stopHold();
+      }
+      isMouseDown = false;
+    };
+
+    // Touch event handlers
+    const touchStartHandler = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      isTouchStarted = true;
+      startHold();
+    };
+
+    const touchEndHandler = (e) => {
+      e.preventDefault();
+      if (isTouchStarted) {
+        stopHold();
+      }
+      isTouchStarted = false;
+    };
+
+    const touchMoveHandler = (e) => {
+      e.preventDefault();
+
+      // Check if touch is still within bubble bounds
+      const touch = e.touches[0];
+      if (touch) {
+        const rect = bubbleContainer.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+
+        // If touch moves outside bubble, stop holding
+        if (x < -10 || x > rect.width + 10 || y < -10 || y > rect.height + 10) {
+          if (isTouchStarted) {
+            stopHold();
+          }
+          isTouchStarted = false;
+        }
+      }
+    };
+
+    // Store handlers for cleanup
+    bubbleContainer._holdMouseDownHandler = mouseDownHandler;
+    bubbleContainer._holdMouseUpHandler = mouseUpHandler;
+    bubbleContainer._holdMouseLeaveHandler = mouseLeaveHandler;
+    bubbleContainer._holdTouchStartHandler = touchStartHandler;
+    bubbleContainer._holdTouchEndHandler = touchEndHandler;
+    bubbleContainer._holdTouchMoveHandler = touchMoveHandler;
+
+    // Store state for cleanup
+    bubbleContainer._isHolding = () => isHolding;
+    bubbleContainer._stopHold = stopHold;
+
+    // Add event listeners
+    bubbleContainer.addEventListener('mousedown', mouseDownHandler, { passive: false });
+    bubbleContainer.addEventListener('mouseup', mouseUpHandler, { passive: false });
+    bubbleContainer.addEventListener('mouseleave', mouseLeaveHandler, { passive: false });
+
+    bubbleContainer.addEventListener('touchstart', touchStartHandler, { passive: false });
+    bubbleContainer.addEventListener('touchend', touchEndHandler, { passive: false });
+    bubbleContainer.addEventListener('touchmove', touchMoveHandler, { passive: false });
+  }
+
+  playHoldSuccessAnimation({ bubble, bubbleText, bubbleBorder, onComplete }) {
+    const successTl = gsap.timeline({
+      onComplete: () => {
+        if (onComplete) onComplete();
+      }
+    });
+
+    this.activeAnimations.push(successTl);
+
+    successTl.to(bubble, {
+      scale: 1,
+      backgroundColor: 'rgba(210, 217, 240, 0.7)',
+      boxShadow:
+        '0px 0px 6.3px 1px rgba(69, 194, 248, 1), inset 0px 0px 4px 0px rgba(69, 194, 248, 1)',
+      duration: 0.2,
+      ease: 'back.out(2)'
+    });
+
+    successTl.to(
+      bubbleBorder,
+      {
+        borderColor: 'rgba(160, 214, 255, 1)',
+        borderWidth: 2,
+        duration: 0.2,
+        ease: 'back.out(2)'
+      },
+      0
+    );
+
+    if (bubbleText) {
+      successTl.to(
+        bubbleText,
+        {
+          '--text-color': 'rgba(160, 214, 255, 1)',
+          duration: 0.2,
+          ease: 'back.out(2)'
+        },
+        0
+      );
+    }
+
+    successTl.to({}, { duration: 0.3 });
+
+    successTl.to(bubble, {
+      opacity: 0,
+      scale: 0.3,
+      duration: 0.3,
+      ease: 'power2.in'
+    });
+
+    successTl.to(
+      bubbleBorder,
+      {
+        opacity: 0,
+        scale: 0.3,
+        duration: 0.3,
+        ease: 'power2.in'
+      },
+      '-=0.3'
+    );
+
+    if (bubbleText) {
+      successTl.to(
+        bubbleText,
+        {
+          opacity: 0,
+          scale: 2.5,
+          duration: 0.3,
+          ease: 'power2.in'
+        },
+        '-=0.3'
+      );
+    }
+
+    return successTl;
+  }
+
+  cleanupHoldHandlers(bubbleContainer) {
+    if (!bubbleContainer) return;
+
+    // Stop any active hold
+    if (bubbleContainer._stopHold) {
+      bubbleContainer._stopHold();
+    }
+
+    // Clear any running hold timer
+    if (bubbleContainer._holdTimer) {
+      clearTimeout(bubbleContainer._holdTimer);
+      bubbleContainer._holdTimer = null;
+    }
+
+    // Kill any animations on the container
+    gsap.killTweensOf(bubbleContainer);
+    gsap.set(bubbleContainer, { scale: 1 });
+
+    // Kill timeline if stored
+    if (bubbleContainer._mainTimeline) {
+      bubbleContainer._mainTimeline.kill();
+      bubbleContainer._mainTimeline = null;
+    }
+
+    // Remove mouse handlers
+    if (bubbleContainer._holdMouseDownHandler) {
+      bubbleContainer.removeEventListener('mousedown', bubbleContainer._holdMouseDownHandler);
+      delete bubbleContainer._holdMouseDownHandler;
+    }
+
+    if (bubbleContainer._holdMouseUpHandler) {
+      bubbleContainer.removeEventListener('mouseup', bubbleContainer._holdMouseUpHandler);
+      delete bubbleContainer._holdMouseUpHandler;
+    }
+
+    if (bubbleContainer._holdMouseLeaveHandler) {
+      bubbleContainer.removeEventListener('mouseleave', bubbleContainer._holdMouseLeaveHandler);
+      delete bubbleContainer._holdMouseLeaveHandler;
+    }
+
+    // Remove touch handlers
+    if (bubbleContainer._holdTouchStartHandler) {
+      bubbleContainer.removeEventListener('touchstart', bubbleContainer._holdTouchStartHandler);
+      delete bubbleContainer._holdTouchStartHandler;
+    }
+
+    if (bubbleContainer._holdTouchEndHandler) {
+      bubbleContainer.removeEventListener('touchend', bubbleContainer._holdTouchEndHandler);
+      delete bubbleContainer._holdTouchEndHandler;
+    }
+
+    if (bubbleContainer._holdTouchMoveHandler) {
+      bubbleContainer.removeEventListener('touchmove', bubbleContainer._holdTouchMoveHandler);
+      delete bubbleContainer._holdTouchMoveHandler;
+    }
+
+    // Clean up stored functions
+    delete bubbleContainer._isHolding;
+    delete bubbleContainer._stopHold;
+
+    // Remove holding class
+    bubbleContainer.classList.remove('holding');
+  }
+
   scheduleNextGame() {
     if (!this.isGameActive) return;
 
     if (this.nextGameTimeout) {
       clearTimeout(this.nextGameTimeout);
+      const timeoutIndex = this.activeTimeouts.indexOf(this.nextGameTimeout);
+      if (timeoutIndex > -1) {
+        this.activeTimeouts.splice(timeoutIndex, 1);
+      }
     }
 
     this.nextGameTimeout = setTimeout(() => {
@@ -782,6 +1210,7 @@ class TapAndSwipeGame {
 
   startGame() {
     if (!this.isGameActive || this.isAnimationRunning) return;
+
     this.currentState = this.states[Math.floor(Math.random() * this.states.length)];
 
     switch (this.currentState) {
@@ -802,18 +1231,25 @@ class TapAndSwipeGame {
       }
     }
 
-    console.log(this.currentState);
+    console.log(`Starting game state: ${this.currentState}`);
   }
 
   init() {
     this.isGameActive = true;
+
+    // Start first game immediately
+    this.startGame();
+
+    // Set up interval for subsequent games
     this.intervalId = setInterval(() => {
-      this.startGame();
-      console.log(this.speed);
+      if (!this.isAnimationRunning) {
+        this.startGame();
+      }
     }, this.speed);
   }
 
   destroy() {
+    console.log('Destroying game...');
     this.isGameActive = false;
 
     // Clear main interval
@@ -823,12 +1259,16 @@ class TapAndSwipeGame {
     }
 
     // Clear all active timeouts
-    this.activeTimeouts.forEach((timeout) => clearTimeout(timeout));
+    this.activeTimeouts.forEach((timeout) => {
+      if (timeout) clearTimeout(timeout);
+    });
     this.activeTimeouts = [];
 
     // Kill all active animations
     this.activeAnimations.forEach((animation) => {
-      if (animation.kill) animation.kill();
+      if (animation && animation.kill) {
+        animation.kill();
+      }
     });
     this.activeAnimations = [];
 
@@ -854,19 +1294,35 @@ class TapAndSwipeGame {
 
       bubbles.forEach((bubble) => {
         this.cleanupBubbleClickHandler(bubble);
+        this.cleanupHoldHandlers(bubble);
         bubble.remove();
       });
-      lines.forEach((line) => line.remove());
+
+      lines.forEach((line) => {
+        this.cleanupSwipeHandlers(line);
+        line.remove();
+      });
     }
+
+    console.log('Game destroyed successfully');
   }
 }
 
+// Export for use
 const tapAndSwipeGame = new TapAndSwipeGame();
 
-window.addEventListener('DOMContentLoaded', () => {
-  tapAndSwipeGame.init();
-});
+// Auto-initialize when DOM is ready
+if (typeof window !== 'undefined') {
+  window.addEventListener('DOMContentLoaded', () => {
+    tapAndSwipeGame.init();
+  });
 
-window.addEventListener('beforeunload', () => {
-  tapAndSwipeGame.destroy();
-});
+  window.addEventListener('beforeunload', () => {
+    tapAndSwipeGame.destroy();
+  });
+
+  // Export to window for manual control if needed
+  window.tapAndSwipeGame = tapAndSwipeGame;
+}
+
+export default TapAndSwipeGame;
