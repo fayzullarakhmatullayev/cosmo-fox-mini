@@ -23,17 +23,55 @@ class TapAndSwipeGame {
     this.reactionTime = 0;
     this.animationSpeeds = INITIAL_SPEED;
     this.rocketElement = document.querySelector('#rainbow-rocket');
+
+    // New properties for controlled rocket movement
+    this.currentRocketPosition = 0; // Current position as percentage (0-100)
+    this.maxMovementPerMiss = 10; // Maximum movement per missed element (10% of total strip)
+    this.isElementMissed = false; // Track if current element was missed
   }
 
+  // New method to move rocket by controlled amount
+  moveRocket(direction = 'forward') {
+    if (!this.rocketElement) return;
+
+    const movementAmount = this.maxMovementPerMiss;
+
+    if (direction === 'forward') {
+      this.currentRocketPosition = Math.min(100, this.currentRocketPosition + movementAmount);
+    } else if (direction === 'backward') {
+      this.currentRocketPosition = Math.max(0, this.currentRocketPosition - movementAmount);
+    }
+
+    // Apply the new position smoothly
+    gsap.to(this.rocketElement, {
+      right: `${this.currentRocketPosition}%`,
+      duration: 0.3,
+      ease: 'power2.out'
+    });
+  }
+
+  // Modified animateRocket method - now only sets up timing, doesn't move rocket
   animateRocket() {
-    const tl = gsap.timeline();
-    this.rocketElement.style.right = '0%';
-    tl.to(this.rocketElement, { right: '100%', duration: this.speed / 1000 });
-
+    // Start reaction time tracking
     this.reactionTime = Date.now();
-    this.rocketElement.animation = tl;
+    this.isElementMissed = false;
 
-    this.activeAnimations.push(tl);
+    // Set up timeout to mark element as missed if not interacted with
+    const missTimeout = setTimeout(() => {
+      if (!this.isElementMissed) {
+        this.isElementMissed = true;
+        this.moveRocket('forward'); // Move rocket forward when element is missed
+      }
+    }, this.speed);
+
+    this.activeTimeouts.push(missTimeout);
+  }
+
+  // New method to handle successful interaction
+  handleSuccessfulInteraction() {
+    this.isElementMissed = false; // Mark as not missed
+    this.moveRocket('backward'); // Move rocket backward on success
+    this.updateReactionTime();
   }
 
   createTapBubble() {
@@ -199,7 +237,7 @@ class TapAndSwipeGame {
       isClicked = true;
 
       tl.kill();
-      this.updateReactionTime();
+      this.handleSuccessfulInteraction(); // Use new method instead of updateReactionTime
 
       clickSuccessAnimation = this.playBubbleSuccessAnimation({
         bubble,
@@ -317,8 +355,6 @@ class TapAndSwipeGame {
       bubbleContainer.removeEventListener('touchmove', bubbleContainer._touchMoveHandler);
       delete bubbleContainer._touchMoveHandler;
     }
-
-    delete bubbleContainer._touchStarted;
   }
 
   createSwipe() {
@@ -397,7 +433,8 @@ class TapAndSwipeGame {
         isInteracted = true;
 
         tl.kill();
-        this.updateReactionTime();
+        this.handleSuccessfulInteraction(); // Use new method instead of updateReactionTime
+
         successAnimation = this.playSwipeSuccessAnimation({
           line,
           lineContainer,
@@ -440,25 +477,22 @@ class TapAndSwipeGame {
       opacity: 0,
       duration: 0.034,
       onStart: () => {
-        gsap.to(splash, {
-          opacity: 0.8,
-          duration: 0.0085
-        });
-
-        gsap.to(wave, {
-          opacity: 0.5,
-          duration: 0.0085
-        });
-      },
-      onComplete: () => {
-        gsap.to(wave, {
-          opacity: 0,
-          duration: 0.0085
-        });
-        gsap.to(splash, {
-          opacity: 0,
-          duration: 0.0085
-        });
+        if (petals) {
+          const tlP = gsap.timeline();
+          tlP
+            .to(petals, {
+              scale: 0.8,
+              opacity: 0.6,
+              duration: this.animationSpeeds.bubble.petalsDuration,
+              ease: 'none'
+            })
+            .to(petals, {
+              scale: 1.2,
+              opacity: 0,
+              duration: this.animationSpeeds.bubble.petalsDuration,
+              ease: 'none'
+            });
+        }
       }
     });
   }
@@ -727,7 +761,7 @@ class TapAndSwipeGame {
         holdCompleted = true;
 
         tl.kill();
-        this.updateReactionTime();
+        this.handleSuccessfulInteraction(); // Use new method instead of updateReactionTime
 
         holdSuccessAnimation = this.playHoldSuccessAnimation({
           bubble,
@@ -879,7 +913,6 @@ class TapAndSwipeGame {
 
       // Pause main timeline immediately
       if (tl && !tl.paused()) {
-        this.rocketElement.animation?.pause();
         tl.pause();
       }
 
@@ -985,7 +1018,6 @@ class TapAndSwipeGame {
         // Resume main timeline
         setTimeout(() => {
           if (tl && tl.paused()) {
-            this.rocketElement.animation?.resume();
             tl.resume();
           }
         }, 50);
@@ -1317,10 +1349,28 @@ class TapAndSwipeGame {
   }
 
   updateReactionTime() {
-    gsap.to(this.rocketElement, { right: '0%', duration: 0.1 });
-    this.rocketElement.animation?.kill();
+    // Remove the rocket animation logic since we now control movement manually
     const current = Date.now();
     this.reactionTime = current - this.reactionTime;
+  }
+
+  // New method to reset rocket position (useful for game start/reset)
+  resetRocketPosition() {
+    this.currentRocketPosition = 0;
+    if (this.rocketElement) {
+      gsap.set(this.rocketElement, { right: '0%' });
+    }
+  }
+
+  // New method to get rocket status
+  getRocketStatus() {
+    if (this.currentRocketPosition <= 33) {
+      return 'green'; // Safe zone
+    } else if (this.currentRocketPosition <= 66) {
+      return 'yellow'; // Warning zone
+    } else {
+      return 'red'; // Danger zone
+    }
   }
 
   startGame() {
@@ -1353,6 +1403,7 @@ class TapAndSwipeGame {
 
   init() {
     this.isGameActive = true;
+    this.resetRocketPosition(); // Initialize rocket at starting position
 
     // Start first game immediately
     this.startGame();
@@ -1419,6 +1470,9 @@ class TapAndSwipeGame {
         line.remove();
       });
     }
+
+    // Reset rocket position
+    this.resetRocketPosition();
 
     console.log('Game destroyed successfully');
   }
