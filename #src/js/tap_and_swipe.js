@@ -24,13 +24,11 @@ class TapAndSwipeGame {
     this.animationSpeeds = INITIAL_SPEED;
     this.rocketElement = document.querySelector('#rainbow-rocket');
 
-    // New properties for controlled rocket movement
-    this.currentRocketPosition = 0; // Current position as percentage (0-100)
-    this.maxMovementPerMiss = 10; // Maximum movement per missed element (10% of total strip)
-    this.isElementMissed = false; // Track if current element was missed
+    this.currentRocketPosition = 0;
+    this.maxMovementPerMiss = 10;
+    this.isElementMissed = false;
   }
 
-  // New method to move rocket by controlled amount
   moveRocket(direction = 'forward') {
     if (!this.rocketElement) return;
 
@@ -50,27 +48,24 @@ class TapAndSwipeGame {
     });
   }
 
-  // Modified animateRocket method - now only sets up timing, doesn't move rocket
   animateRocket() {
     // Start reaction time tracking
     this.reactionTime = Date.now();
     this.isElementMissed = false;
 
-    // Set up timeout to mark element as missed if not interacted with
     const missTimeout = setTimeout(() => {
       if (!this.isElementMissed) {
         this.isElementMissed = true;
-        this.moveRocket('forward'); // Move rocket forward when element is missed
+        this.moveRocket('forward');
       }
     }, this.speed);
 
     this.activeTimeouts.push(missTimeout);
   }
 
-  // New method to handle successful interaction
   handleSuccessfulInteraction() {
-    this.isElementMissed = false; // Mark as not missed
-    this.moveRocket('backward'); // Move rocket backward on success
+    this.isElementMissed = false;
+    this.moveRocket('backward');
     this.updateReactionTime();
   }
 
@@ -433,7 +428,7 @@ class TapAndSwipeGame {
         isInteracted = true;
 
         tl.kill();
-        this.handleSuccessfulInteraction(); // Use new method instead of updateReactionTime
+        this.handleSuccessfulInteraction();
 
         successAnimation = this.playSwipeSuccessAnimation({
           line,
